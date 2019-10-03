@@ -10,6 +10,7 @@ import org.apache.commons.codec.binary.Base64
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 import scala.reflect.ClassTag
+import scala.collection.Seq
 import scala.util.Try
 
 /**
@@ -100,7 +101,7 @@ object DecodedJwt {
     * @param secret                  the secret to sign with
     * @return a string representing the signature of a jwt
     */
-  private def encodedSignature(encodedHeaderAndPayload: String, algorithm: Algorithm, secret: Array[Byte] = Array()): String = {
+  private def encodedSignature(encodedHeaderAndPayload: String, algorithm: Algorithm, secret: Array[Byte]): String = {
     import io.igl.jwt.Algorithm._
 
     def hmac(alg: Algorithm) = {

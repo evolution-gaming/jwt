@@ -1,6 +1,6 @@
 package io.igl.jwt
 
-import play.api.libs.json.{JsNumber, JsArray, JsString, JsValue}
+import play.api.libs.json.{JsString, JsValue}
 
 /** Scope claim 
   * 

@@ -1,6 +1,5 @@
 package io.igl.jwt
 
-import io.igl.jwt.Algorithm.{HS384, HS512}
 import org.apache.commons.codec.binary.Base64
 import play.api.libs.json.{JsNumber, JsValue}
 
@@ -378,7 +377,7 @@ class JwtSpec extends UnitSpec {
       alg.value,
       Set(),
       Set(Aud),
-      aud = Some(Aud(aud.value.left + "a"))
+      aud = Some(Aud(aud.value.left.toString + "a"))
     ).isFailure should be (true)
   }
 
