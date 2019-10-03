@@ -135,10 +135,6 @@ object DecodedJwt {
     }
   }
 
-  /**
-    * This method uses the underlying method {@link #validateEncodedJwtWithEncodedSecret(String,Array[Byte],Algorithm,Set[HeaderField],Set[ClaimField],Set[String],Set[String],Option[Iss],Option[Aud], Option[Iat], Option[Sub],Option[Jti],String)},
-    * by providing the secret with {@link String#getBytes(StandardCharsets#UTF_8)}
-    */
   def validateEncodedJwt(
                           jwt: String,
                           key: String,
@@ -253,20 +249,19 @@ object DecodedJwt {
       }
     }.getOrElse(throw new IllegalArgumentException("Decoded payload could not be parsed to a JSON object"))
 
-    /** Time in seconds since 1970-01-01T00:00:00Z UTC **/
-    def now: Long = System.currentTimeMillis / 1000
+    def nowSeconds: Long = System.currentTimeMillis / 1000
 
     val claims = payloadJson.fields.flatMap {
       case (field, value) =>
         requiredClaims.find(x => x.name == field) match {
           case Some(requiredClaim) => requiredClaim.attemptApply(value).map {
             case exp: Exp =>
-              now < exp.value match {
+              nowSeconds < exp.value match {
                 case true  => exp
                 case false => throw new IllegalArgumentException("Jwt has expired")
               }
             case nbf: Nbf =>
-              now > nbf.value match {
+              nowSeconds > nbf.value match {
                 case true  => nbf
                 case false => throw new IllegalArgumentException("Jwt is not yet valid")
               }
