@@ -15,13 +15,7 @@ lazy val jwt = (project in file("."))
       "org.scalatest" %% "scalatest" % "3.2.20" % Test,
       "commons-codec" % "commons-codec" % "1.22.1",
     ),
-    versionPolicyIntention := {
-      // TODO temporary disable bin-compat check for first Scala 3 build
-      scalaBinaryVersion.value match {
-        case "2.13" => Compatibility.BinaryCompatible
-        case _ => Compatibility.None
-      }
-    },
+    versionPolicyIntention := Compatibility.BinaryCompatible,
     versionPolicyIgnored ++= Seq(
       "com.typesafe.play" %% "play-functional",
       "com.typesafe.play" %% "play-json",
