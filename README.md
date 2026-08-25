@@ -1,3 +1,5 @@
+> **Archived:** this project is no longer maintained. The repository is read-only, so there will be no further releases, bug fixes or answers to issues. Fork it if you still need it.
+
 # jwt [![Build Status](https://travis-ci.org/evolution-gaming/jwt.svg?branch=master)](https://travis-ci.org/evolution-gaming/jwt)
 
 This library is a Scala implementation of the JSON Web Token (JWT) [specification](http://self-issued.info/docs/draft-ietf-oauth-json-web-token.html).
