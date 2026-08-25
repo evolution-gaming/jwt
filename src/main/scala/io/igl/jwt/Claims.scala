@@ -1,6 +1,6 @@
 package io.igl.jwt
 
-import play.api.libs.json.{JsNumber, JsArray, JsString, JsValue}
+import play.api.libs.json.{JsArray, JsNumber, JsString, JsValue}
 
 trait ClaimValue extends JwtValue {
   val field: ClaimField
@@ -37,8 +37,8 @@ object Sub extends ClaimField {
 case class Aud(value: Either[String, Seq[String]]) extends ClaimValue {
   override val field: ClaimField = Aud
   override val jsValue: JsValue = value match {
-    case Left(single) => JsString(single)
-    case Right(many) => JsArray(many.map(JsString))
+    case Left(single) => JsString.apply(single)
+    case Right(many) => JsArray(many.map(JsString.apply))
   }
 }
 
@@ -47,7 +47,7 @@ object Aud extends ClaimField {
   def apply(value: Seq[String]): Aud = Aud(Right(value))
 
   override def attemptApply(value: JsValue): Option[ClaimValue] =
-    value.asOpt[Seq[String]].map(v => Aud(Right(v))).orElse{
+    value.asOpt[Seq[String]].map(v => Aud(Right(v))).orElse {
       value.asOpt[String].map(v => Aud(Left(v)))
     }
 

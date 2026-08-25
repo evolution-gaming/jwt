@@ -7,13 +7,19 @@ import play.api.libs.json._
  */
 trait JwtValue {
 
-  /** The field to which a value belongs **/
+  /**
+   * The field to which a value belongs *
+   */
   val field: JwtField
 
-  /** The real value of a field **/
+  /**
+   * The real value of a field *
+   */
   val value: Any
 
-  /** The value of a field represented as json **/
+  /**
+   * The value of a field represented as json *
+   */
   val jsValue: JsValue
 
 }

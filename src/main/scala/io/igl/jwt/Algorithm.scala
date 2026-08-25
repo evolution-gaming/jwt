@@ -35,8 +35,10 @@ object Algorithm {
 
   /**
    * Tries to find an implemented algorithm that matches a string
-   * @param name the string used by the jwt header alg to represent an algorithm
-   * @return returns an Algorithm wrapped in Some on success, otherwise None
+   * @param name
+   *   the string used by the jwt header alg to represent an algorithm
+   * @return
+   *   returns an Algorithm wrapped in Some on success, otherwise None
    */
   def getAlgorithm(name: String): Option[Algorithm] = name match {
     case HS256.name => Some(HS256)

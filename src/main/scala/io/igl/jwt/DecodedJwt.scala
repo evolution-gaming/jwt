@@ -1,26 +1,28 @@
 package io.igl.jwt
 
-import java.security.{Signature, KeyFactory}
-import java.security.spec.PKCS8EncodedKeySpec
-
-import java.nio.charset.StandardCharsets.UTF_8
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
 import org.apache.commons.codec.binary.Base64
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
-import scala.reflect.ClassTag
+
+import java.nio.charset.StandardCharsets.UTF_8
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.{KeyFactory, Signature}
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 import scala.collection.Seq
+import scala.reflect.ClassTag
 import scala.util.Try
 
 /**
  * A class representing a decoded jwt.
  *
- * When an [[Alg]] value is omitted it defaults to none. Where multiple headers or claims with the same field name are
- * provided, the last occurrence is used.
+ * When an [[Alg]] value is omitted it defaults to none. Where multiple headers or claims with the
+ * same field name are provided, the last occurrence is used.
  *
- * @param headers_ the values of the headers to be set
- * @param claims_ the values of the claims to be set
+ * @param headers_
+ *   the values of the headers to be set
+ * @param claims_
+ *   the values of the claims to be set
  */
 class DecodedJwt(headers_ : Seq[HeaderValue], claims_ : Seq[ClaimValue]) extends Jwt {
 
@@ -43,12 +45,12 @@ class DecodedJwt(headers_ : Seq[HeaderValue], claims_ : Seq[ClaimValue]) extends
   }
 
   override def getHeader[T <: HeaderValue: ClassTag]: Option[T] = headers.collectFirst {
-      case header: T => header.asInstanceOf[T]
-    }
+    case header: T => header.asInstanceOf[T]
+  }
 
   override def getClaim[T <: ClaimValue: ClassTag]: Option[T] = claims.collectFirst {
-      case claim: T => claim.asInstanceOf[T]
-    }
+    case claim: T => claim.asInstanceOf[T]
+  }
 
   private val algorithm = getHeader[Alg].map(_.value).get
 
@@ -84,23 +86,33 @@ class DecodedJwt(headers_ : Seq[HeaderValue], claims_ : Seq[ClaimValue]) extends
 
 object DecodedJwt {
 
-  /** Returns the Base64 decoded version of provided string **/
+  /**
+   * Returns the Base64 decoded version of provided string *
+   */
   private def decodeBase64(subject: String, charset: String): String = new String(Base64.decodeBase64(subject), charset)
 
-  /** Returns the Base64 url safe encoding of a byte array **/
+  /**
+   * Returns the Base64 url safe encoding of a byte array *
+   */
   private def encodeBase64Url(subject: Array[Byte]): String = Base64.encodeBase64URLSafeString(subject)
 
-  /** Returns the Base64 url safe encoding of a string **/
+  /**
+   * Returns the Base64 url safe encoding of a string *
+   */
   private def encodeBase64Url(subject: String): String = encodeBase64Url(subject.getBytes("utf-8"))
 
   /**
-    * Returns the signature of a jwt.
-    *
-    * @param encodedHeaderAndPayload the encoded header and payload of a jwt
-    * @param algorithm               the algorithm to be used
-    * @param secret                  the secret to sign with
-    * @return a string representing the signature of a jwt
-    */
+   * Returns the signature of a jwt.
+   *
+   * @param encodedHeaderAndPayload
+   *   the encoded header and payload of a jwt
+   * @param algorithm
+   *   the algorithm to be used
+   * @param secret
+   *   the secret to sign with
+   * @return
+   *   a string representing the signature of a jwt
+   */
   private def encodedSignature(encodedHeaderAndPayload: String, algorithm: Algorithm, secret: Array[Byte]): String = {
     import io.igl.jwt.Algorithm._
 
@@ -130,75 +142,97 @@ object DecodedJwt {
 
   private def constantTimeIsEqual(as: Array[Byte], bs: Array[Byte]): Boolean = {
     as.length == bs.length match {
-      case true => (as zip bs).foldLeft (0) {(r, ab) => r + (ab._1 ^ ab._2)} == 0
+      case true => (as zip bs).foldLeft(0) { (r, ab) => r + (ab._1 ^ ab._2) } == 0
       case _ => false
     }
   }
 
   def validateEncodedJwt(
-                          jwt: String,
-                          key: String,
-                          requiredAlg: Algorithm,
-                          requiredHeaders: Set[HeaderField],
-                          requiredClaims: Set[ClaimField],
-                          ignoredHeaders: Set[String] = Set(),
-                          ignoredClaims: Set[String] = Set(),
-                          iss: Option[Iss] = None,
-                          aud: Option[Aud] = None,
-                          iat: Option[Iat] = None,
-                          sub: Option[Sub] = None,
-                          jti: Option[Jti] = None,
-                          charset: String = "UTF-8"): Try[Jwt] = {
+    jwt: String,
+    key: String,
+    requiredAlg: Algorithm,
+    requiredHeaders: Set[HeaderField],
+    requiredClaims: Set[ClaimField],
+    ignoredHeaders: Set[String] = Set(),
+    ignoredClaims: Set[String] = Set(),
+    iss: Option[Iss] = None,
+    aud: Option[Aud] = None,
+    iat: Option[Iat] = None,
+    sub: Option[Sub] = None,
+    jti: Option[Jti] = None,
+    charset: String = "UTF-8",
+  ): Try[Jwt] = {
     validateEncodedJwtWithEncodedSecret(
-                                        jwt,
-                                        key.getBytes(UTF_8),
-                                        requiredAlg,
-                                        requiredHeaders,
-                                        requiredClaims,
-                                        ignoredHeaders,
-                                        ignoredClaims,
-                                        iss,
-                                        aud,
-                                        iat,
-                                        sub,
-                                        jti,
-                                        charset)
+      jwt,
+      key.getBytes(UTF_8),
+      requiredAlg,
+      requiredHeaders,
+      requiredClaims,
+      ignoredHeaders,
+      ignoredClaims,
+      iss,
+      aud,
+      iat,
+      sub,
+      jti,
+      charset,
+    )
   }
 
   /**
-    * Attempts to construct a DecodedJwt from an encoded jwt.
-    *
-    * Any fields found in the jwt that are not in either the required set or the ignore set, will cause validation to fail.
-    * Including an algorithm field in the requiredHeaders set is not needed, instead use the requiredAlg parameter.
-    *
-    * @param jwt             an encrypted jwt
-    * @param key             the key to use when validating the signature
-    * @param requiredAlg     the algorithm to require and use when validating the signature
-    * @param requiredHeaders the headers the encrypted jwt is required to use
-    * @param requiredClaims  the claims the encrypted jwt is required to use
-    * @param ignoredHeaders  the headers to ignore should the encrypted jwt use them
-    * @param ignoredClaims   the claims to ignore should the encrypted jwt use them
-    * @param iss             used optionally, when you want to only validate a jwt where its required iss claim is equal to this
-    * @param aud             used optionally, when you want to only validate a jwt where its required aud claim is equal to this
-    * @param iat             used optionally, when you want to only validate a jwt where its required iat claim is equal to this
-    * @param sub             used optionally, when you want to only validate a jwt where its required sub claim is equal to this
-    * @param jti             used optionally, when you want to only validate a jwt where its required jti claim is equal to this
-    * @return returns a [[DecodedJwt]] wrapped in Success when successful, otherwise Failure
-    */
+   * Attempts to construct a DecodedJwt from an encoded jwt.
+   *
+   * Any fields found in the jwt that are not in either the required set or the ignore set, will
+   * cause validation to fail. Including an algorithm field in the requiredHeaders set is not
+   * needed, instead use the requiredAlg parameter.
+   *
+   * @param jwt
+   *   an encrypted jwt
+   * @param key
+   *   the key to use when validating the signature
+   * @param requiredAlg
+   *   the algorithm to require and use when validating the signature
+   * @param requiredHeaders
+   *   the headers the encrypted jwt is required to use
+   * @param requiredClaims
+   *   the claims the encrypted jwt is required to use
+   * @param ignoredHeaders
+   *   the headers to ignore should the encrypted jwt use them
+   * @param ignoredClaims
+   *   the claims to ignore should the encrypted jwt use them
+   * @param iss
+   *   used optionally, when you want to only validate a jwt where its required iss claim is equal
+   *   to this
+   * @param aud
+   *   used optionally, when you want to only validate a jwt where its required aud claim is equal
+   *   to this
+   * @param iat
+   *   used optionally, when you want to only validate a jwt where its required iat claim is equal
+   *   to this
+   * @param sub
+   *   used optionally, when you want to only validate a jwt where its required sub claim is equal
+   *   to this
+   * @param jti
+   *   used optionally, when you want to only validate a jwt where its required jti claim is equal
+   *   to this
+   * @return
+   *   returns a [[DecodedJwt]] wrapped in Success when successful, otherwise Failure
+   */
   def validateEncodedJwtWithEncodedSecret(
-                          jwt: String,
-                          key: Array[Byte],
-                          requiredAlg: Algorithm,
-                          requiredHeaders: Set[HeaderField],
-                          requiredClaims: Set[ClaimField],
-                          ignoredHeaders: Set[String] = Set(),
-                          ignoredClaims: Set[String] = Set(),
-                          iss: Option[Iss] = None,
-                          aud: Option[Aud] = None,
-                          iat: Option[Iat] = None,
-                          sub: Option[Sub] = None,
-                          jti: Option[Jti] = None,
-                          charset: String = "UTF-8"): Try[Jwt] = Try {
+    jwt: String,
+    key: Array[Byte],
+    requiredAlg: Algorithm,
+    requiredHeaders: Set[HeaderField],
+    requiredClaims: Set[ClaimField],
+    ignoredHeaders: Set[String] = Set(),
+    ignoredClaims: Set[String] = Set(),
+    iss: Option[Iss] = None,
+    aud: Option[Aud] = None,
+    iat: Option[Iat] = None,
+    sub: Option[Sub] = None,
+    jti: Option[Jti] = None,
+    charset: String = "UTF-8",
+  ): Try[Jwt] = Try {
 
     require(requiredHeaders.map(_.name).size == requiredHeaders.size, "Required headers contains field name collisions")
     require(requiredClaims.map(_.name).size == requiredClaims.size, "Required claims contains field name collisions")
@@ -211,8 +245,8 @@ object DecodedJwt {
       case _ => throw new IllegalArgumentException("Jwt could not be split into a header, payload, and signature")
     }
 
-    val header    = parts._1
-    val payload   = parts._2
+    val header = parts._1
+    val payload = parts._2
     val signature = parts._3
 
     // Validate headers
@@ -225,15 +259,17 @@ object DecodedJwt {
 
     val headers = headerJson.fields.flatMap {
       case (Alg.name, value) => Alg.attemptApply(value).map {
-        case alg if alg.value == requiredAlg => alg
-        case _ => throw new IllegalArgumentException("Given jwt uses a different algorithm ")
-      }.orElse(throw new IllegalArgumentException("Algorithm values did not match"))
+          case alg if alg.value == requiredAlg => alg
+          case _ => throw new IllegalArgumentException("Given jwt uses a different algorithm ")
+        }.orElse(throw new IllegalArgumentException("Algorithm values did not match"))
       case (field, value) =>
         requiredHeaders.find(x => x.name == field) match {
           case Some(requiredHeader) => requiredHeader.attemptApply(value)
           case None =>
             ignoredHeaders.find(_ == field).
-              getOrElse(throw new IllegalArgumentException("Found header that is in neither the required or ignored sets"))
+              getOrElse(throw new IllegalArgumentException(
+                "Found header that is in neither the required or ignored sets",
+              ))
             None
         }
     }
@@ -255,46 +291,48 @@ object DecodedJwt {
       case (field, value) =>
         requiredClaims.find(x => x.name == field) match {
           case Some(requiredClaim) => requiredClaim.attemptApply(value).map {
-            case exp: Exp =>
-              nowSeconds < exp.value match {
-                case true  => exp
-                case false => throw new IllegalArgumentException("Jwt has expired")
-              }
-            case nbf: Nbf =>
-              nowSeconds > nbf.value match {
-                case true  => nbf
-                case false => throw new IllegalArgumentException("Jwt is not yet valid")
-              }
-            case fIss: Iss =>
-              iss.map(_.equals(fIss) match {
-                case true => fIss
-                case false => throw new IllegalArgumentException("Iss didn't match required iss")
-              }).getOrElse(fIss)
-            case fAud: Aud =>
-              aud.map(_.equals(fAud) match {
-                case true => fAud
-                case false => throw new IllegalArgumentException("Aud didn't match required aud")
-              }).getOrElse(fAud)
-            case fIat: Iat =>
-              iat.map(_.equals(fIat) match {
-                case true => fIat
-                case false => throw new IllegalArgumentException("Iat didn't match required iat")
-              }).getOrElse(fIat)
-            case fSub: Sub =>
-              sub.map(_.equals(fSub) match {
-                case true => fSub
-                case false => throw new IllegalArgumentException("Sub didn't match required sub")
-              }).getOrElse(fSub)
-            case fJti: Jti =>
-              jti.map(_.equals(fJti) match {
-                case true => fJti
-                case false => throw new IllegalArgumentException("Jti didn't match required jti")
-              }).getOrElse(fJti)
-            case claim => claim
-          }
+              case exp: Exp =>
+                nowSeconds < exp.value match {
+                  case true => exp
+                  case false => throw new IllegalArgumentException("Jwt has expired")
+                }
+              case nbf: Nbf =>
+                nowSeconds > nbf.value match {
+                  case true => nbf
+                  case false => throw new IllegalArgumentException("Jwt is not yet valid")
+                }
+              case fIss: Iss =>
+                iss.map(_.equals(fIss) match {
+                  case true => fIss
+                  case false => throw new IllegalArgumentException("Iss didn't match required iss")
+                }).getOrElse(fIss)
+              case fAud: Aud =>
+                aud.map(_.equals(fAud) match {
+                  case true => fAud
+                  case false => throw new IllegalArgumentException("Aud didn't match required aud")
+                }).getOrElse(fAud)
+              case fIat: Iat =>
+                iat.map(_.equals(fIat) match {
+                  case true => fIat
+                  case false => throw new IllegalArgumentException("Iat didn't match required iat")
+                }).getOrElse(fIat)
+              case fSub: Sub =>
+                sub.map(_.equals(fSub) match {
+                  case true => fSub
+                  case false => throw new IllegalArgumentException("Sub didn't match required sub")
+                }).getOrElse(fSub)
+              case fJti: Jti =>
+                jti.map(_.equals(fJti) match {
+                  case true => fJti
+                  case false => throw new IllegalArgumentException("Jti didn't match required jti")
+                }).getOrElse(fJti)
+              case claim => claim
+            }
           case None =>
             ignoredClaims.find(_ == field).
-              getOrElse(throw new IllegalArgumentException("Found claim that is in neither the required or ignored sets"))
+              getOrElse(throw new IllegalArgumentException(
+                "Found claim that is in neither the required or ignored sets",
+              ))
             None
         }
     }
