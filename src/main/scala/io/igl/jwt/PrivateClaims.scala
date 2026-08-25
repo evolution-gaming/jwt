@@ -2,11 +2,11 @@ package io.igl.jwt
 
 import play.api.libs.json.{JsString, JsValue}
 
-/** Scope claim 
-  * 
-  * Not in JWT specification but required by Google Cloud Platform for example
-  * 
-  */
+/**
+ * Scope claim
+ *
+ * Not in JWT specification but required by Google Cloud Platform for example
+ */
 case class Scope(value: String) extends ClaimValue {
   override val jsValue = JsString(value)
   override val field: ClaimField = Scope

@@ -5,7 +5,9 @@ package io.igl.jwt
  */
 trait JwtField {
 
-  /** The value to use of the field name **/
+  /**
+   * The value to use of the field name *
+   */
   val name: String
 
 }

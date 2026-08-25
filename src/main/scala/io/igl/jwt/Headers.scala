@@ -36,10 +36,10 @@ object Alg extends HeaderField {
 
 case object Cty extends HeaderField with HeaderValue {
   override def attemptApply(value: JsValue): Option[HeaderValue] =
-    value.asOpt[String].map{case this.value => Cty}
+    value.asOpt[String].map { case this.value => Cty }
 
   override val name = "cty"
   override val field: HeaderField = this
   override val value = "JWT"
-  override val jsValue: JsValue = JsString(value)
+  override val jsValue: JsValue = JsString.apply(value.toString)
 }
